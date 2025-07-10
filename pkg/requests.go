@@ -74,62 +74,58 @@ func (c *Crawler) CrawlDomain() {
 
 	crawl := func() {
 		for rawURL := range workQueue {
-			normURL, err := NormalizeURL(rawURL)
-			if err != nil {
-				log.Printf("normalize error: %v\n", err)
-				wg.Done()
-				continue
-			}
-
-			mu.Lock()
-			if _, ok := c.Pages[normURL]; ok {
-				c.Pages[normURL]++
-				mu.Unlock()
-				wg.Done()
-				continue
-			}
-
-			if len(c.Pages) >= c.MaxPages {
-				mu.Unlock()
-				wg.Done()
-				continue
-			}
-
-			c.Pages[normURL] = 1
-			mu.Unlock()
-
-			html, err := GetHTML(rawURL)
-			if err != nil {
-				log.Printf("fetch error: %v\n", err)
-				wg.Done()
-				continue
-			}
-
-			links, err := ScanPageForURL(html, c.BaseURL)
-			if err != nil {
-				log.Printf("scan error: %v\n", err)
-				wg.Done()
-				continue
-			}
-
-			for _, link := range links {
-				linkParsed, err := url.Parse(link)
+			func() {
+				defer wg.Done()
+				normURL, err := NormalizeURL(rawURL)
 				if err != nil {
-					continue
+					log.Printf("normalize error: %v\n", err)
+					return
 				}
-				if linkParsed.Hostname() == baseParsed.Hostname() {
-					mu.Lock()
-					if len(c.Pages) >= c.MaxPages {
-						mu.Unlock()
-						break
-					}
-					mu.Unlock()
-					wg.Add(1)
-					workQueue <- link
-				}
-			}
 
-			wg.Done()
+				mu.Lock()
+				if _, ok := c.Pages[normURL]; ok {
+					c.Pages[normURL]++
+					mu.Unlock()
+					return
+				}
+
+				if len(c.Pages) >= c.MaxPages {
+					mu.Unlock()
+					return
+				}
+
+				c.Pages[normURL] = 1
+				mu.Unlock()
+
+				html, err := GetHTML(rawURL)
+				if err != nil {
+					log.Printf("fetch error: %v\n", err)
+					return
+				}
+
+				links, err := ScanPageForURL(html, c.BaseURL)
+				if err != nil {
+					log.Printf("scan error: %v\n", err)
+					return
+				}
+
+				for _, link := range links {
+					linkParsed, err := url.Parse(link)
+					if err != nil {
+						continue
+					}
+					if linkParsed.Hostname() == baseParsed.Hostname() {
+						mu.Lock()
+						if len(c.Pages) >= c.MaxPages {
+							mu.Unlock()
+							break
+						}
+						mu.Unlock()
+						wg.Add(1)
+						workQueue <- link
+					}
+				}
+			}()
 		}
 	}
 
@@ -142,7 +138,4 @@ func (c *Crawler) CrawlDomain() {
 
 	wg.Wait()
 	close(workQueue)
-	for range workQueue {
-		// Drainage
-	}
 }
