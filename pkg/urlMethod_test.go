@@ -36,6 +36,11 @@ func TestNormalizeURL(t *testing.T) {
 			inputURL: "https://blog.boot.dev:80",
 			expected: "blog.boot.dev",
 		},
+		{
+			name:     "remove scheme 6",
+			inputURL: "https://blog.bOOt.dev:80",
+			expected: "blog.boot.dev",
+		},
 	}
 
 	for i, tc := range tests {

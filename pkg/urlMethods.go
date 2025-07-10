@@ -9,20 +9,14 @@ import (
 )
 
 func NormalizeURL(s string) (string, error) {
-	// re := regexp.MustCompile(`^https?://`)
-	// s = re.ReplaceAllString(s, "")
 	data, err := url.Parse(s)
 	if err != nil {
 		return "", errors.New("Weird error")
 	}
 
-	path := strings.TrimRight(data.EscapedPath(), "/")
+	path := strings.TrimSuffix(data.EscapedPath(), "/")
 
-	if path == "" || path == "/" {
-		return data.Hostname(), nil
-	}
-
-	return data.Hostname() + path, nil
+	return strings.ToLower(data.Hostname() + path), nil
 }
 
 func ScanPageForURL(rawBody, rootURL string) ([]string, error) {

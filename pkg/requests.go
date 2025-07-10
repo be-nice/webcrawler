@@ -34,34 +34,6 @@ func GetHTML(rawURL string) (string, error) {
 	return string(body), nil
 }
 
-func CrawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
-	normCurr, err := NormalizeURL(rawCurrentURL)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(rawBaseURL, rawCurrentURL)
-
-	if _, ok := pages[normCurr]; ok {
-		pages[normCurr]++
-		return
-	}
-
-	pages[normCurr] = 1
-	html, _ := GetHTML(rawCurrentURL)
-	data, _ := ScanPageForURL(html, rawBaseURL)
-
-	u1, _ := url.Parse(rawBaseURL)
-	for _, val := range data {
-		u2, _ := url.Parse(val)
-
-		if u1.Hostname() != u2.Hostname() {
-			continue
-		}
-		CrawlPage(rawBaseURL, val, pages)
-	}
-}
-
 func (c *Crawler) CrawlDomain() {
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -82,20 +54,9 @@ func (c *Crawler) CrawlDomain() {
 					return
 				}
 
-				mu.Lock()
-				if _, ok := c.Pages[normURL]; ok {
-					c.Pages[normURL]++
-					mu.Unlock()
+				if !c.handlePageVisit(&mu, normURL) {
 					return
 				}
-
-				if len(c.Pages) >= c.MaxPages {
-					mu.Unlock()
-					return
-				}
-
-				c.Pages[normURL] = 1
-				mu.Unlock()
 
 				html, err := GetHTML(rawURL)
 				if err != nil {

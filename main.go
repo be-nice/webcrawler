@@ -10,6 +10,7 @@ import (
 
 func main() {
 	if len(os.Args) != 4 {
+		fmt.Println("Usage: go run . <url> <thread count> <page limit>")
 		log.Fatal("Invalid argument count")
 	}
 
