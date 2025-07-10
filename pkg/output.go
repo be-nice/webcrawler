@@ -3,6 +3,9 @@ package pkg
 import (
 	"fmt"
 	"sort"
+	"strconv"
+
+	"github.com/fatih/color"
 )
 
 func PrintOutput(pages map[string]int) {
@@ -17,6 +20,6 @@ func PrintOutput(pages map[string]int) {
 	})
 
 	for _, page := range pageSlice {
-		fmt.Printf("%s | Visit count %d\n", page.k, page.v)
+		fmt.Printf("%s | Visit count %s\n", color.GreenString(page.k), color.RedString(strconv.Itoa(page.v)))
 	}
 }
