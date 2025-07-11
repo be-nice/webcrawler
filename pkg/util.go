@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 )
 
@@ -40,4 +42,12 @@ func (c *Crawler) handleWorkQueue(mu *sync.Mutex, link string, base *url.URL) bo
 	}
 
 	return true
+}
+
+func ValidateScheme(url string) string {
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		return fmt.Sprintf("http://%s", url)
+	}
+
+	return url
 }

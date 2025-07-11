@@ -24,11 +24,13 @@ func main() {
 		log.Fatalf("invalid MaxPages: %v", err)
 	}
 
-	fmt.Printf("Starting crawl of: %s\n", os.Args[1])
+	url := pkg.ValidateScheme(os.Args[1])
+
+	fmt.Printf("Starting crawl of: %s\n", url)
 
 	crawler := pkg.Crawler{
 		Pages:   make(map[string]int),
-		BaseURL: os.Args[1],
+		BaseURL: url,
 		Config: pkg.Config{
 			MaxWorkers: maxWorkers,
 			MaxPages:   maxPages,
