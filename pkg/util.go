@@ -1,6 +1,9 @@
 package pkg
 
-import "sync"
+import (
+	"net/url"
+	"sync"
+)
 
 func (c *Crawler) handlePageVisit(mu *sync.Mutex, link string) bool {
 	mu.Lock()
@@ -16,6 +19,25 @@ func (c *Crawler) handlePageVisit(mu *sync.Mutex, link string) bool {
 	}
 
 	c.Pages[link] = 1
+
+	return true
+}
+
+func (c *Crawler) handleWorkQueue(mu *sync.Mutex, link string, base *url.URL) bool {
+	linkParsed, err := url.Parse(link)
+	if err != nil {
+		return false
+	}
+
+	if linkParsed.Hostname() != base.Hostname() {
+		return false
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(c.Pages) >= c.MaxPages {
+		return false
+	}
 
 	return true
 }

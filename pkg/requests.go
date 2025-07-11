@@ -71,17 +71,7 @@ func (c *Crawler) CrawlDomain() {
 				}
 
 				for _, link := range links {
-					linkParsed, err := url.Parse(link)
-					if err != nil {
-						continue
-					}
-					if linkParsed.Hostname() == baseParsed.Hostname() {
-						mu.Lock()
-						if len(c.Pages) >= c.MaxPages {
-							mu.Unlock()
-							break
-						}
-						mu.Unlock()
+					if c.handleWorkQueue(&mu, link, baseParsed) {
 						wg.Add(1)
 						workQueue <- link
 					}
